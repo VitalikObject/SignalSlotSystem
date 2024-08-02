@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
 ## License
 
-This project is licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/VitalikObject/TicTacToe-Graphics/blob/main/LICENSE.txt) file for more details.
+This project is licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/VitalikObject/SignalSlotSystem/blob/main/LICENSE.txt) file for more details.
 
 ## Contributing
 
