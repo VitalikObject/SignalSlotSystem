@@ -5,5 +5,5 @@
 void TestObject1::showMessage() {
     qDebug() << "TestObject1 showMessage() called!";
 
-    m_signalSlotSystem.sendSignal(&onShowMessage);
+    m_signalSlotSystem.sendSignalAsync(&onShowMessage);
 }

@@ -13,8 +13,11 @@ int main(int argc, char *argv[])
 
     signalSlotSystem.connect(&testObject1.onShowMessage, [&testObject2] { testObject2.showMessage(); });
     signalSlotSystem.sendSignal(&testObject1.onShowMessage);
+    signalSlotSystem.sendSignalAsync(&testObject1.onShowMessage);
 
     testObject1.showMessage();
+
+    signalSlotSystem.waitForAll();
 
     return a.exec();
 }
