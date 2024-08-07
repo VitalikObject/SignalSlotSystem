@@ -77,6 +77,11 @@ private:
 
     template<typename SlotObject, typename... Args, std::size_t... Is>
     void callSlotImpl(SlotObject* slotObject, void (SlotObject::*slot)(Args...), const std::vector<std::any>& args, std::index_sequence<Is...>) {
+        bool typesMatch = ((typeid(Args) == args[Is].type()) && ...);
+        if (!typesMatch) {
+            throw std::invalid_argument("Argument types do not match slot signature");
+        }
+
         (slotObject->*slot)(any_cast_helper<Args>(args[Is])...);
     }
 
