@@ -2,6 +2,7 @@
 
 #include <any>
 #include <functional>
+#include <future>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
@@ -21,7 +22,7 @@ public:
     void connect(SignalObject* signalObject, void (SignalObject::*signal)(SignalArgs...),
                  SlotObject* slotObject, void (SlotObject::*slot)(SlotArgs...)) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        auto slotFunc = [slotObject, slot, this](const std::vector<std::any>& args) {
+        auto slotFunc = [this, slotObject, slot](const std::vector<std::any>& args) {
             callSlot(slotObject, slot, args);
         };
         m_connections[signalObject][std::type_index(typeid(signal))].push_back(slotFunc);
@@ -34,6 +35,25 @@ public:
         auto& connections = m_connections[signalObject][std::type_index(signalType)];
         for (auto& slotFunc : connections) {
             slotFunc(anyArgs);
+        }
+    }
+
+    template<typename... Args>
+    void emitSignalAsync(void* signalObject, const std::type_info& signalType, Args&&... args) {
+        std::vector<std::any> anyArgs = { std::any(std::forward<Args>(args))... };
+
+        std::vector<std::future<void>> futures;
+
+        futures.push_back(std::async(std::launch::async, [this, signalObject, anyArgs, &signalType]() {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            auto& connections = m_connections[signalObject][std::type_index(signalType)];
+            for (auto& slotFunc : connections) {
+                slotFunc(anyArgs);
+            }
+        }));
+
+        for (auto& future : futures) {
+            future.wait();
         }
     }
 
