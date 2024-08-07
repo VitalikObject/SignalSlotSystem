@@ -7,8 +7,13 @@ int main(int argc, char *argv[])
     SignalObject signalObject;
     SlotObject slotObject;
 
-    signalSlotSystem.connect(&signalObject, &SignalObject::signal, &slotObject, &SlotObject::slot);
-    signalObject.signal(42, "hello");
+    signalSlotSystem.connect(&signalObject, &SignalObject::showMessage, &slotObject, &SlotObject::showMessage);
+    signalSlotSystem.connect(&signalObject, &SignalObject::addNumbers, &slotObject, &SlotObject::addNumbers);
+    signalSlotSystem.connect(&signalObject, &SignalObject::multiplyNumbers, &slotObject, &SlotObject::multiplyNumbers);
+
+    signalObject.showMessage("hello");
+    signalObject.addNumbers(4, 5);
+    signalObject.multiplyNumbers(4, 5, 6);
 
     return 0;
 }

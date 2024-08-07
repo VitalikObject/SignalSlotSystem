@@ -6,7 +6,9 @@
 
 class SignalObject : VObject{
 public:
-    void signal(int a, const std::string& b);
+    void showMessage(const std::string& msg);
+    void addNumbers(int a, int b);
+    void multiplyNumbers(int a, int b, int c);
 
 private:
     SignalSlotSystem& m_system = SignalSlotSystem::getInstance();

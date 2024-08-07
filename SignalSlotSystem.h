@@ -27,13 +27,16 @@ public:
         m_connections[signalObject][std::type_index(typeid(signal))].push_back(slotFunc);
     }
 
-    void emitSignal(void* signalObject, const std::type_info& signalType, const std::vector<std::any>& args) {
+    template<typename... Args>
+    void emitSignal(void* signalObject, const std::type_info& signalType, Args&&... args) {
         std::lock_guard<std::mutex> lock(m_mutex);
+        std::vector<std::any> anyArgs = { std::any(std::forward<Args>(args))... };
         auto& connections = m_connections[signalObject][std::type_index(signalType)];
         for (auto& slotFunc : connections) {
-            slotFunc(args);
+            slotFunc(anyArgs);
         }
     }
+
 private:
     SignalSlotSystem() {};
     std::unordered_map<void*, std::unordered_map<std::type_index, std::vector<SlotFunction>>> m_connections;
