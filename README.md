@@ -40,34 +40,22 @@ make
 
 ## Usage
 
-The repository includes example classes (`TestObject1`, `TestObject2`) to demonstrate how to use the signal-slot system. Below is a simple usage example from the `main.cpp` file:
+The repository includes example classes (`SignalObject`, `SlotObject`) to demonstrate how to use the signal-slot system. Below is a simple usage example from the `main.cpp` file:
 
 ```cpp
-#include <QCoreApplication>
-#include "SignalSlotSystem.h"
-#include "TestObject1.h"
-#include "TestObject2.h"
-#include "TestObject3.h"
+#include "SignalObject.h"
+#include "SlotObject.h"
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    SignalSlotSystem& signalSlotSystem = SignalSlotSystem::getInstance();
+    SignalObject signalObject;
+    SlotObject slotObject;
 
-    SignalSlotSystem &signalSlotSystem = SignalSlotSystem::getInstance();
-    TestObject1 testObject1;
-    TestObject2 testObject2;
-    TestObject3 testObject3;
+    signalSlotSystem.connect(&signalObject, &SignalObject::signal, &slotObject, &SlotObject::slot);
+    signalObject.signal(42, "hello");
 
-    signalSlotSystem.connect(&testObject1.onShowMessage, [&testObject2] { testObject2.showMessage(); });
-    signalSlotSystem.connect(&testObject1.onShowMessage, [&testObject3](int a, std::string b) { testObject3.showMessage(a, b); }, 1, "hello");
-    signalSlotSystem.sendSignal(&testObject1.onShowMessage);
-    signalSlotSystem.sendSignalAsync(&testObject1.onShowMessage);
-
-    testObject1.showMessage();
-
-    signalSlotSystem.waitForAll();
-
-    return a.exec();
+    return 0;
 }
 
 ```

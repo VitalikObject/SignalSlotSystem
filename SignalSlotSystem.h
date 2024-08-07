@@ -1,36 +1,63 @@
 #pragma once
-#include <map>
+
+#include <any>
+#include <functional>
+#include <unordered_map>
 #include <vector>
 #include <mutex>
-#include <future>
-
-using Signal = std::function<void()>;
-using Slot = std::function<void()>;
+#include <typeindex>
 
 class SignalSlotSystem
 {
 public:
+    using SlotFunction = std::function<void(const std::vector<std::any>&)>;
+
     static SignalSlotSystem& getInstance();
 
     SignalSlotSystem(const SignalSlotSystem&) = delete;
     SignalSlotSystem& operator=(const SignalSlotSystem&) = delete;
 
-    void connect(Signal* signal, Slot slot);
-
-    template <typename Func, typename... Args>
-    void connect(Signal* signal, Func&& func, Args&&... args) {
+    template<typename SignalObject, typename... SignalArgs, typename SlotObject, typename... SlotArgs>
+    void connect(SignalObject* signalObject, void (SignalObject::*signal)(SignalArgs...),
+                 SlotObject* slotObject, void (SlotObject::*slot)(SlotArgs...)) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_connections[signal].push_back([func = std::forward<Func>(func), ...args = std::forward<Args>(args)]() {
-            func(args...);
-        });
+        auto slotFunc = [slotObject, slot, this](const std::vector<std::any>& args) {
+            callSlot(slotObject, slot, args);
+        };
+        m_connections[signalObject][std::type_index(typeid(signal))].push_back(slotFunc);
     }
 
-    void sendSignal(Signal* signal);
-    void sendSignalAsync(Signal* signal);
-    void waitForAll();
+    void emitSignal(void* signalObject, const std::type_info& signalType, const std::vector<std::any>& args) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto& connections = m_connections[signalObject][std::type_index(signalType)];
+        for (auto& slotFunc : connections) {
+            slotFunc(args);
+        }
+    }
 private:
-    SignalSlotSystem();
+    SignalSlotSystem() {};
+    std::unordered_map<void*, std::unordered_map<std::type_index, std::vector<SlotFunction>>> m_connections;
     std::mutex m_mutex;
-    std::vector<std::future<void>> m_futures;
-    std::map<Signal*, std::vector<Slot>> m_connections;
+
+    template<typename T>
+    static T any_cast_helper(const std::any& operand) {
+        try {
+            return std::any_cast<T>(operand);
+        } catch (const std::bad_any_cast&) {
+            throw std::bad_any_cast();
+        }
+    }
+
+    template<typename SlotObject, typename... Args, std::size_t... Is>
+    void callSlotImpl(SlotObject* slotObject, void (SlotObject::*slot)(Args...), const std::vector<std::any>& args, std::index_sequence<Is...>) {
+        (slotObject->*slot)(any_cast_helper<Args>(args[Is])...);
+    }
+
+    template<typename SlotObject, typename... Args>
+    void callSlot(SlotObject* slotObject, void (SlotObject::*slot)(Args...), const std::vector<std::any>& args) {
+        if (args.size() != sizeof...(Args)) {
+            throw std::invalid_argument("Incorrect number of arguments");
+        }
+        callSlotImpl(slotObject, slot, args, std::index_sequence_for<Args...>{});
+    }
 };

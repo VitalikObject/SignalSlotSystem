@@ -14,11 +14,11 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 add_executable(SignalSlotSystem
   main.cpp
-  SignalSlotSystem.h SignalSlotSystem.cpp
+  SignalSlotSystem.h
   VObject.h
-  TestObject1.h TestObject1.cpp
-  TestObject2.h TestObject2.cpp
-  TestObject3.h TestObject3.cpp
+  SignalObject.h SignalObject.cpp
+  SlotObject.h SlotObject.cpp
+  SignalSlotSystem.cpp
 )
 target_link_libraries(SignalSlotSystem Qt${QT_VERSION_MAJOR}::Core)
 
