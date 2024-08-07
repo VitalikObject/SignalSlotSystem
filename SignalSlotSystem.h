@@ -19,7 +19,7 @@ public:
     SignalSlotSystem(const SignalSlotSystem&) = delete;
     SignalSlotSystem& operator=(const SignalSlotSystem&) = delete;
 
-    template<typename SignalObject, typename... SignalArgs, typename SlotObject, typename... SlotArgs>
+    template<class SignalObject, typename... SignalArgs, class SlotObject, typename... SlotArgs>
     void connect(SignalObject* signalObject, void (SignalObject::*signal)(SignalArgs...),
                  SlotObject* slotObject, void (SlotObject::*slot)(SlotArgs...)) {
         std::unique_lock lock(m_mutex);
@@ -29,7 +29,7 @@ public:
         m_connections[signalObject][std::type_index(typeid(signal))].push_back(slotFunc);
     }
 
-    template<typename Func, typename... Args>
+    template<class Func, typename... Args>
     void emitSignal(void* signalObject, Func&& func, Args&&... args) {
         std::shared_lock lock(m_mutex);
         std::vector<std::any> anyArgs = { std::any(std::forward<Args>(args))... };
@@ -40,7 +40,7 @@ public:
         }
     }
 
-    template<typename Func, typename... Args>
+    template<class Func, typename... Args>
     void emitSignalAsync(void* signalObject, Func&& func, Args&&... args) {
         std::vector<std::any> anyArgs = { std::any(std::forward<Args>(args))... };
 
