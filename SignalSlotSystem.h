@@ -28,21 +28,24 @@ public:
         m_connections[signalObject][std::type_index(typeid(signal))].push_back(slotFunc);
     }
 
-    template<typename... Args>
-    void emitSignal(void* signalObject, const std::type_info& signalType, Args&&... args) {
+    template<typename Func, typename... Args>
+    void emitSignal(void* signalObject, Func&& func, Args&&... args) {
         std::lock_guard<std::mutex> lock(m_mutex);
         std::vector<std::any> anyArgs = { std::any(std::forward<Args>(args))... };
+        const std::type_info& signalType = typeid(func);
         auto& connections = m_connections[signalObject][std::type_index(signalType)];
         for (auto& slotFunc : connections) {
             slotFunc(anyArgs);
         }
     }
 
-    template<typename... Args>
-    void emitSignalAsync(void* signalObject, const std::type_info& signalType, Args&&... args) {
+    template<typename Func, typename... Args>
+    void emitSignalAsync(void* signalObject, Func&& func, Args&&... args) {
         std::vector<std::any> anyArgs = { std::any(std::forward<Args>(args))... };
 
         std::vector<std::future<void>> futures;
+
+        const std::type_info& signalType = typeid(func);
 
         futures.push_back(std::async(std::launch::async, [this, signalObject, anyArgs, &signalType]() {
             std::lock_guard<std::mutex> lock(m_mutex);
